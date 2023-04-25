@@ -6,14 +6,13 @@ import threading
 import time  # Import the time module
 from utils import save_scenarios, load_scenarios
 import logging
-from tkinter import Tk
-
 import sys
 import os
+from pystray import Icon, Menu, MenuItem
+from PIL import Image
 
-
-sys.stdout = open(os.devnull, 'w')
-sys.stderr = open(os.devnull, 'w')
+# sys.stdout = open(os.devnull, 'w')
+# sys.stderr = open(os.devnull, 'w')
 
 # Configure the logger
 logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
@@ -37,14 +36,7 @@ host = config['connection']['host']
 port = config['connection']['port']
 password = config['connection']['password']
 
-obs_running = True
-try:
-    client = obs.ReqClient(host=host, port=port, password=password)
-except ConnectionRefusedError:
-    obs_running = False
-    client = None
-
-# client = obs.ReqClient(host=host, port=port, password=password)
+client = obs.ReqClient(host=host, port=port, password=password)
 
 # Load the list of scenarios from a file
 
@@ -133,26 +125,45 @@ def process_data(client, data):
             previous_game_state['assists'] = data['player']['assists']
 
 
+def on_close(window):
+    # Hide the window
+    window.withdraw()
+    # Show the system tray icon
+    icon.visible = True
+
+
+def on_restore(window):
+    # Show the window
+    window.deiconify()
+    # Hide the system tray icon
+    icon.visible = False
+
+
+def on_exit(icon, window):
+    # Stop the system tray icon
+    icon.stop()
+    # Destroy the window
+    window.destroy()
+
+
+# Create a system tray icon with a menu
+icon = Icon('My App', Image.open('icon.png'), menu=Menu(
+    MenuItem('Restore', lambda: on_restore(window)),
+    MenuItem('Exit', lambda: on_exit(icon, window))
+))
+
 # Start the Flask app in dota2_gsi.py and pass in the client object and process_data function
 threading.Thread(target=run, args=(client, process_data)).start()  # Start the Flask app in a separate thread
 
 
 # whether the source is active
-if client is not None:
-    response1 = client.get_source_active('KILL_ALERT')
-else:
-    print("OBS is not running")
+response1 = client.get_source_active('KILL_ALERT')
+# print(f"KILLER_ALERT ACTIVE?: {response1.video_showing}")
 
 # gets the list of scenes
-if client is not None:
-    response3 = client.get_scene_list()
-else:
-    print("OBS is not running")
+response3 = client.get_scene_list()
 
 # prints an array of scenes
 # print(f"Scene list: {response3.scenes}")
 
-root = Tk()
-root.title("OBS Triggered ⚡")
-create_gui(client, scenarios, root, obs_running)
-
+create_gui(client, scenarios)
