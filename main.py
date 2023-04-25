@@ -157,7 +157,7 @@ threading.Thread(target=run, args=(client, process_data)).start()  # Start the F
 
 
 # whether the source is active
-response1 = client.get_source_active('KILL_ALERT')
+# response1 = client.get_source_active('KILL_ALERT')
 # print(f"KILLER_ALERT ACTIVE?: {response1.video_showing}")
 
 # gets the list of scenes

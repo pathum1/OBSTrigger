@@ -9,9 +9,8 @@ from pystray import Icon, Menu, MenuItem
 from PIL import Image
 from edit_delete import edit_scenario_window
 
-
-# sys.stdout = open(os.devnull, 'w')
-# sys.stderr = open(os.devnull, 'w')
+sys.stdout = open(os.devnull, 'w')
+sys.stderr = open(os.devnull, 'w')
 
 
 def on_button_click(client, listbox):
@@ -46,8 +45,8 @@ def on_save_scenario(scene_var, source_var, event_var, scenarios_listbox, scenar
     save_scenarios(scenarios)
     scenario_text = f"Scenario {len(scenarios)} -> {scene_name} -> {source_name} -> {event_name}"
     scenarios_listbox.insert(tk.END, scenario_text)
-    max_width = max(scenarios_listbox.winfo_reqwidth(), 200)
-    scenarios_listbox.config(width=max_width)
+    # max_width = max(scenarios_listbox.winfo_reqwidth(), 200)
+    # scenarios_listbox.config(width=max_width)
     window.destroy()
 
 
@@ -65,7 +64,7 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     def fetch_scene_collections():
         def fetch_and_update():
             response = client.get_scene_collection_list()
-            collections = [collection['name'] for collection in response['scene_collections']]
+            collections = [collection for collection in response.scene_collections]
             window.after(0, lambda: scene_collection_combobox.configure(values=collections))
 
         fetch_thread = threading.Thread(target=fetch_and_update)
@@ -75,7 +74,7 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     scene_collection_label = tk.Label(window, text="Scene Collection:")
     scene_collection_label.pack()
     scene_collection_var = tk.StringVar(window)
-    scene_collection_combobox = ttk.Combobox(window, textvariable=scene_collection_var, postcommand=fetch_scene_collections)
+    scene_collection_combobox = ttk.Combobox(window, textvariable=scene_collection_var)
     scene_collection_combobox.pack()
 
     scene_label = tk.Label(window, text="Scene:")
@@ -84,31 +83,53 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     scene_combobox = ttk.Combobox(window, textvariable=scene_var)
     scene_combobox.pack()
 
+    def fetch_scenes():
+        scene_combobox.set('')  # Clear the current value of the ComboBox
+        response = client.get_scene_list()
+        scenes = [scene['sceneName'] for scene in response.scenes]
+        scene_combobox.configure(values=scenes)
+
+    def fetch_initial_data():
+        # Fetch the initial scene collections and scenes
+        response1 = client.get_scene_collection_list()
+        scene_collections = [collection for collection in response1.scene_collections]
+        scene_collection_combobox.configure(values=scene_collections)
+
+        # Fetch the initial scenes
+        fetch_scenes()
+
+    fetch_initial_data()
+
+    def fetch_sources():
+        selected_scene = scene_var.get()
+        if selected_scene:
+            response = client.get_scene_item_list(selected_scene)
+            sources = [item['sourceName'] for item in response.scene_items]
+            source_combobox.configure(values=sources)
+            source_combobox.set('')  # Clear the current value of the ComboBox
+
+    scene_combobox.bind('<<ComboboxSelected>>', lambda event: fetch_sources())
+
     source_label = tk.Label(window, text="Source:")
     source_label.pack()
     source_var = tk.StringVar(window)
     source_combobox = ttk.Combobox(window, textvariable=source_var)
     source_combobox.pack()
 
+    # Call the fetch_initial_data function to populate the Comboboxes
+    fetch_initial_data()
+
     def on_source_select(source):
         source_var.set(source)
 
-    def update_comboboxes(event):
+    def set_current_scene_collection(event=None):
         scene_collection_name = scene_collection_var.get()
         if scene_collection_name:
             client.set_current_scene_collection(scene_collection_name)
-            response = client.get_scene_list()
-            scenes = [scene['name'] for scene in response.scenes]
-            scene_combobox['values'] = scenes
+            # Update the scenes list when the scene collection changes
+            fetch_scenes()
 
-            scene_name = scene_var.get()
-            if scene_name:
-                response = client.get_scene_item_list(scene_name)
-                sources = [item['sourceName'] for item in response.scene_items]
-                source_combobox['values'] = sources
-
-    scene_collection_combobox.bind('<<ComboboxSelected>>', update_comboboxes)
-    scene_combobox.bind('<<ComboboxSelected>>', update_comboboxes)
+    scene_collection_combobox.bind('<<ComboboxSelected>>', set_current_scene_collection)
 
     event_label = tk.Label(window, text="Event:")
     event_label.pack()
@@ -116,6 +137,12 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     event_menu = ttk.OptionMenu(window, event_var, "Select an Event",
                                 *["Kill", "Death", "Assist"])
     event_menu.pack()
+
+    def test_selected_scenario():
+        selected_index = scenarios_listbox.curselection()
+        if selected_index:
+            selected_scenario = scenarios[selected_index[0]]
+            test_scenario(client, selected_scenario)
 
     button_frame = tk.Frame(window)
     button_frame.pack(pady=10)
@@ -152,7 +179,7 @@ def create_gui(client, scenarios):
     button_frame = tk.Frame(root)
     button_frame.pack(pady=10)
 
-    scenarios_listbox = tk.Listbox(root)
+    scenarios_listbox = tk.Listbox(root, width=80, selectborderwidth=2, relief=tk.SUNKEN)
     scenarios_listbox.pack()
     edit_scenario_button = tk.Button(root, text="Edit Scenario")
     edit_scenario_button.pack(padx=100, pady=100)
@@ -177,13 +204,25 @@ def create_gui(client, scenarios):
 
     delete_scenario_button.config(command=on_delete_scenario)
 
+    test_scenario_button = tk.Button(button_frame, text="Test Scenario", state=tk.DISABLED)
+    test_scenario_button.pack(side=tk.LEFT, padx=5)
+
     def on_select_scenario(event):
         if scenarios_listbox.curselection():
             edit_scenario_button.config(state=tk.NORMAL)
             delete_scenario_button.config(state=tk.NORMAL)
+            test_scenario_button.config(state=tk.NORMAL)  # Enable the Test Scenario button
         else:
             edit_scenario_button.config(state=tk.DISABLED)
             delete_scenario_button.config(state=tk.DISABLED)
+            test_scenario_button.config(state=tk.DISABLED)  # Disable the Test Scenario button
+
+    def on_test_scenario():
+        selected_index = scenarios_listbox.curselection()[0]
+        scenario = scenarios[selected_index]
+        test_scenario(client, scenario)
+
+    test_scenario_button.config(command=on_test_scenario)  # Move this line here
 
     scenarios_listbox.bind('<<ListboxSelect>>', on_select_scenario)
     edit_scenario_button.config(state=tk.DISABLED)
@@ -193,12 +232,11 @@ def create_gui(client, scenarios):
     edit_scenario_button.config(state=tk.DISABLED)
 
     for i, scenario in enumerate(scenarios):
-        scenario_text = f"Scenario {i + 1} -> {scenario['scene']} -> {scenario['source']} -> {scenario['event']}"
+        scenario_text = f"Scenario {i + 1} ▶ {scenario['scene']} ▶ {scenario['source']} ➡ {scenario['event']}"
         scenarios_listbox.insert(tk.END, scenario_text)
 
-    max_width = max(scenarios_listbox.winfo_reqwidth(), 50)
-    scenarios_listbox.config(width=max_width)
-
+    # max_width = max(scenarios_listbox.winfo_reqwidth(), 50)
+    # scenarios_listbox.config(width=max_width)
     add_scenario_button = tk.Button(button_frame, text="Add Scenario", command=lambda: create_scenario_window(client,
                                                                                                               scenarios_listbox,
                                                                                                               scenarios))
@@ -231,3 +269,4 @@ def create_gui(client, scenarios):
 
     root.mainloop()
     print("GUI created")
+
