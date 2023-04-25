@@ -1,7 +1,6 @@
 import tkinter as tk
-from tkinter import ttk, Toplevel, messagebox
+from tkinter import ttk
 import time
-from tkinter.ttk import Button, Frame
 from utils import save_scenarios
 import sys
 import os
@@ -9,11 +8,10 @@ import threading
 from pystray import Icon, Menu, MenuItem
 from PIL import Image
 from edit_delete import edit_scenario_window
-from styles import apply_styles
 
 
-sys.stdout = open(os.devnull, 'w')
-sys.stderr = open(os.devnull, 'w')
+# sys.stdout = open(os.devnull, 'w')
+# sys.stderr = open(os.devnull, 'w')
 
 
 def on_button_click(client, listbox):
@@ -48,8 +46,8 @@ def on_save_scenario(scene_var, source_var, event_var, scenarios_listbox, scenar
     save_scenarios(scenarios)
     scenario_text = f"Scenario {len(scenarios)} -> {scene_name} -> {source_name} -> {event_name}"
     scenarios_listbox.insert(tk.END, scenario_text)
-    # max_width = 100
-    # scenarios_listbox.config(width=max_width)
+    max_width = max(scenarios_listbox.winfo_reqwidth(), 200)
+    scenarios_listbox.config(width=max_width)
     window.destroy()
 
 
@@ -60,14 +58,8 @@ def test_scenario(client, scenario):
 
 
 def create_scenario_window(client, scenarios_listbox, scenarios):
-    window = Toplevel()
-    window.geometry("500x300")
-    window.title("OBS Triggered - Add scenario ➕")
-    close_button = Button(window, text="Close", command=window.destroy)
-    close_button.pack()
-
-    # window = tk.Toplevel()
-    # window.geometry("800x600")
+    window = tk.Toplevel()
+    window.geometry("800x600")
     scene_label = tk.Label(window, text="Scene:")
     scene_label.pack()
     scene_var = tk.StringVar(window)
@@ -127,26 +119,18 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     window.grab_set()
 
 
-def create_gui(client, scenarios, root, obs_running):
-    apply_styles()
-    # root = Tk()
-    # root.geometry("800x600")
-    button_frame = Frame(root)
+def create_gui(client, scenarios):
+    print("Creating GUI...")
+    root = tk.Tk()
+    root.geometry("800x600")
+    print("Root window created")
+    button_frame = tk.Frame(root)
     button_frame.pack(pady=10)
 
     scenarios_listbox = tk.Listbox(root)
-    scenarios_listbox.pack(padx=20, pady=20)
-    edit_scenario_button = Button(root, text="Edit Scenario")
+    scenarios_listbox.pack()
+    edit_scenario_button = tk.Button(root, text="Edit Scenario")
     edit_scenario_button.pack(padx=100, pady=100)
-
-    if client is None:
-        # Handle the case where client is None
-        # For example, you could display an error message or disable certain features of your app
-        messagebox.showerror("Error", "OBS is not running. Please open OBS.")
-    if not obs_running:
-        obs_not_running_label = tk.Label(root, text="OBS is not running. Please open OBS.", fg="red")
-        obs_not_running_label.pack()
-
     scrollbar = tk.Scrollbar(root, orient="vertical")
     scrollbar.config(command=scenarios_listbox.yview)
     scrollbar.pack(side="right", fill="y")
@@ -181,6 +165,7 @@ def create_gui(client, scenarios, root, obs_running):
     delete_scenario_button.config(state=tk.DISABLED)
 
     scenarios_listbox.config(yscrollcommand=scrollbar.set)
+    edit_scenario_button.config(state=tk.DISABLED)
 
     for i, scenario in enumerate(scenarios):
         scenario_text = f"Scenario {i + 1} -> {scenario['scene']} -> {scenario['source']} -> {scenario['event']}"

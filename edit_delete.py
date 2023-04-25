@@ -1,11 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, Toplevel
+from tkinter import ttk
 from utils import save_scenarios
 
 
 def edit_scenario_window(client, scenarios_listbox, scenarios, selected_index):
-    window = Toplevel()
-    window.title("OBS Triggered - Edit scenario 🔨")
+    window = tk.Toplevel()
     window.geometry("800x600")
     scene_label = tk.Label(window, text="Scene:")
     scene_label.pack()
@@ -59,8 +58,6 @@ def edit_scenario_window(client, scenarios_listbox, scenarios, selected_index):
 def on_save_scenario(scene_var, source_var, event_var,
                      scenarios_listbox, scenarios,
                      selected_index, window):
-    window = Toplevel()
-    window.title("OBS Triggered - Edit scenario 🔨")
     scene_name = scene_var.get()
     source_name = source_var.get()
     event_name = event_var.get()
