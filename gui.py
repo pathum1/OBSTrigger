@@ -8,9 +8,12 @@ import threading
 from pystray import Icon, Menu, MenuItem
 from PIL import Image
 from edit_delete import edit_scenario_window
+from styles import apply_styles
 
-sys.stdout = open(os.devnull, 'w')
-sys.stderr = open(os.devnull, 'w')
+# sys.stdout = open(os.devnull, 'w')
+# sys.stderr = open(os.devnull, 'w')
+
+# apply_styles()
 
 
 def on_button_click(client, listbox):
@@ -32,21 +35,21 @@ def on_scene_select(client, scene_var, listbox):
         listbox.insert(tk.END, item['sourceName'])
 
 
-def on_save_scenario(scene_var, source_var, event_var, scenarios_listbox, scenarios, window):
+def on_save_scenario(scene_collection_var, scene_var, source_var, event_var, scenarios_listbox, scenarios, window):
+    scene_collection_name = scene_collection_var.get()
     scene_name = scene_var.get()
     source_name = source_var.get()
     event_name = event_var.get()
     scenario = {
+        'scene_collection': scene_collection_name,
         'scene': scene_name,
         'source': source_name,
         'event': event_name,
     }
     scenarios.append(scenario)
     save_scenarios(scenarios)
-    scenario_text = f"Scenario {len(scenarios)} -> {scene_name} -> {source_name} -> {event_name}"
+    scenario_text = f"Scenario {len(scenarios)} ▶ {scene_collection_name} ▶ {scene_name} ▶ {source_name} ▶ {event_name}"
     scenarios_listbox.insert(tk.END, scenario_text)
-    # max_width = max(scenarios_listbox.winfo_reqwidth(), 200)
-    # scenarios_listbox.config(width=max_width)
     window.destroy()
 
 
@@ -54,6 +57,25 @@ def test_scenario(client, scenario):
     response = client.get_scene_item_id(scenario['scene'], scenario['source'])
     scene_item_id = response.scene_item_id
     client.set_scene_item_enabled(scenario['scene'], scene_item_id, True)
+    time.sleep(3)
+    client.set_scene_item_enabled(scenario['scene'], scene_item_id, False)
+
+
+# Add the update_visibility_label function here, above the create_scenario_window function
+def update_visibility_label(client, scene_var, source_var, visibility_label):
+    scene_name = scene_var.get()
+    source_name = source_var.get()
+    if scene_name and source_name:
+        response = client.get_source_active(source_name)
+        video_active = response.video_active
+        video_showing = response.video_showing
+        print(f"Source '{source_name}' active: {video_active}, showing: {video_showing}")
+        if video_showing:
+            visibility_label.config(text="❌")
+        else:
+            visibility_label.config(text="✔")
+    else:
+        print("No source selected")
 
 
 def create_scenario_window(client, scenarios_listbox, scenarios):
@@ -100,6 +122,26 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
 
     fetch_initial_data()
 
+    source_label = tk.Label(window, text="Source:")
+    source_label.pack()
+    source_var = tk.StringVar(window)
+
+    source_frame = tk.Frame(window)
+    source_frame.pack()
+
+    source_combobox = ttk.Combobox(source_frame, textvariable=source_var)
+    source_combobox.pack(side=tk.LEFT)
+
+    visibility_label = ttk.Label(source_frame, text=" ", style='Visibility.TLabel')
+    visibility_label.pack(side=tk.RIGHT, padx=(5, 5))
+
+    # source_label_frame = tk.Frame(window)  # New frame for the visibility label
+    # source_label_frame.pack()  # Add this line to pack the new frame
+    # Change it to this line
+    source_combobox.bind('<<ComboboxSelected>>', lambda event: update_visibility_label(client, scene_var, source_var,
+                                                                                        visibility_label))
+
+
     def fetch_sources():
         selected_scene = scene_var.get()
         if selected_scene:
@@ -109,12 +151,6 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
             source_combobox.set('')  # Clear the current value of the ComboBox
 
     scene_combobox.bind('<<ComboboxSelected>>', lambda event: fetch_sources())
-
-    source_label = tk.Label(window, text="Source:")
-    source_label.pack()
-    source_var = tk.StringVar(window)
-    source_combobox = ttk.Combobox(window, textvariable=source_var)
-    source_combobox.pack()
 
     # Call the fetch_initial_data function to populate the Comboboxes
     fetch_initial_data()
@@ -148,8 +184,10 @@ def create_scenario_window(client, scenarios_listbox, scenarios):
     button_frame.pack(pady=10)
 
     save_button = tk.Button(button_frame, text="Save Scenario",
-                            command=lambda: on_save_scenario(scene_var, source_var, event_var, scenarios_listbox,
+                            command=lambda: on_save_scenario(scene_collection_var, scene_var, source_var, event_var,
+                                                             scenarios_listbox,
                                                              scenarios, window))
+
     save_button.pack(side=tk.LEFT, padx=5)
 
     cancel_button = tk.Button(button_frame, text="Cancel", command=window.destroy)
@@ -232,7 +270,8 @@ def create_gui(client, scenarios):
     edit_scenario_button.config(state=tk.DISABLED)
 
     for i, scenario in enumerate(scenarios):
-        scenario_text = f"Scenario {i + 1} ▶ {scenario['scene']} ▶ {scenario['source']} ➡ {scenario['event']}"
+        scene_collection_text = scenario.get('scene_collection', 'Unknown')
+        scenario_text = f"Scenario {i + 1} ▶ {scene_collection_text} ▶ {scenario['scene']} ▶ {scenario['source']} ▶ {scenario['event']}"
         scenarios_listbox.insert(tk.END, scenario_text)
 
     # max_width = max(scenarios_listbox.winfo_reqwidth(), 50)
