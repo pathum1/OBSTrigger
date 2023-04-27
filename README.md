@@ -1,12 +1,12 @@
 # **OBSTrigger**
 
-Easily create and manage OBS Studio scenarios with the OBS Scenario Switcher. This Python-based application offers a simple and user-friendly interface to control your scenes, sources, and events (Kill, Death, or Assist) in OBS Studio.
+Easily create and manage OBS Studio scenarios with the OBSTrigger. This Python-based application offers a simple and user-friendly interface to control your scenes, sources in OBS, triggered by Dota 2 in-game events (Kill, Death, or Assist).
 
 ## **Features**
 
 🔷 **Create, Edit, and Delete Scenarios**: Easily set up and manage your OBS Studio scenarios.
 
-🔷 **Automatic Scene and Source Switching**: Automatically switch scenes and sources in OBS Studio based on the selected event.
+🔷 **Automatic Scene and Source Switching**: Automatically switch scenes and sources in OBS Studio based on the selected Dota 2 in-game event.
 
 🔷 **Intuitive GUI**: A simple graphical user interface built with Tkinter makes managing your scenarios a breeze.
 
