@@ -1,30 +1,33 @@
-# **OBSTrigger**
+# **OBS Scenario Switcher**
 
-OBSTrigger is a Python-based application that allows users to create and manage scenarios for OBS Studio. Each scenario consists of a scene, a source, and an event (Kill, Death, or Assist). The application communicates with OBS Studio through the OBS Websocket API to fetch and update scenes and sources.
+Easily create and manage OBS Studio scenarios with the OBS Scenario Switcher. This Python-based application offers a simple and user-friendly interface to control your scenes, sources, and events (Kill, Death, or Assist) in OBS Studio.
 
 ## **Features**
-🔷Create, edit, and delete scenarios.
 
-🔷Automatically switch OBS scenes and sources based on the selected event.
+🔷 **Create, Edit, and Delete Scenarios**: Easily set up and manage your OBS Studio scenarios.
 
-🔷Easy-to-use graphical user interface (GUI) built using Tkinter.
+🔷 **Automatic Scene and Source Switching**: Automatically switch scenes and sources in OBS Studio based on the selected event.
 
-🔷Saves scenarios to a file, allowing you to load them in future sessions.
+🔷 **Intuitive GUI**: A simple graphical user interface built with Tkinter makes managing your scenarios a breeze.
 
+🔷 **Save and Load Scenarios**: Save your scenarios to a file and load them in future sessions.
 
 ## **Installation**
 
-**1. Clone the repository**
+**1. Clone the Repository**
+
 ```
 git clone https://github.com/pathum1/OBSTrigger.git
 ```
 
-**2. Change into the cloned directory**
+**2. Change into the Cloned Directory**
+
 ```
-cd obs-scenario-switcher
+cd OBSTrigger
 ```
 
 **3.(Optional) Create a virtual environment and activate it**
+
 ```
 python -m venv venv
 source venv/bin/activate  # For Linux and macOS
@@ -60,5 +63,10 @@ python main.py
 **⚡obs-websocket-py**
 
 **⚡requests**
+
+**Use the intuitive interface to create, edit, and delete scenarios, and watch as OBS Studio automatically switches scenes and sources based on your settings.**
+
+**🌟 Support the Project: If you find OBS Scenario Switcher useful, consider supporting the project through GitHub Sponsors or by clicking the donation button below:**
+
 
 ***you can reach me on - nerangenpathum@gmail.com***
