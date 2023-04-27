@@ -1,4 +1,4 @@
-# **OBS Scenario Switcher**
+# **OBSTrigger**
 
 Easily create and manage OBS Studio scenarios with the OBS Scenario Switcher. This Python-based application offers a simple and user-friendly interface to control your scenes, sources, and events (Kill, Death, or Assist) in OBS Studio.
 
