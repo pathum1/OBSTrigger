@@ -66,7 +66,6 @@ python main.py
 
 **Use the intuitive interface to create, edit, and delete scenarios, and watch as OBS Studio automatically switches scenes and sources based on your settings.**
 
-**🌟 Support the Project: If you find OBS Scenario Switcher useful, consider supporting the project through GitHub Sponsors or by clicking the donation button below:**
+**🌟 Support the Project: If you find OBSTrigger useful, consider supporting the project through GitHub Sponsors or by clicking the donation button below:** - to be notified
 
 
-***you can reach me on - nerangenpathum@gmail.com***
