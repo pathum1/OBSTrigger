@@ -10,6 +10,9 @@ import sys
 import os
 from pystray import Icon, Menu, MenuItem
 from PIL import Image
+from tkinter import messagebox
+import tkinter as tk
+
 
 # sys.stdout = open(os.devnull, 'w')
 # sys.stderr = open(os.devnull, 'w')
@@ -31,12 +34,27 @@ scenarios = load_scenarios()
 # Load the configuration file
 config = toml.load('config.toml')
 
+
+class OBSTriggerApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+
+
 # Get the connection details from the config file
 host = config['connection']['host']
 port = config['connection']['port']
 password = config['connection']['password']
 
-client = obs.ReqClient(host=host, port=port, password=password)
+# Add this line
+obs_connected = False
+
+
+try:
+    client = obs.ReqClient(host=host, port=port, password=password)
+    obs_connected = True
+except ConnectionRefusedError:
+    messagebox.showerror("Error", "OBS Studio is not running. Please open OBS Studio.")
+
 
 # Load the list of scenarios from a file
 
@@ -44,6 +62,9 @@ client = obs.ReqClient(host=host, port=port, password=password)
 def process_data(client, data):
     logging.debug(f"Data received by process_data: {data}")
     global previous_game_state  # Use the global previous_game_state variable
+
+    if not obs_connected:
+        return
 
     # print("Processing data...")  # Add a print statement here
     # print(f"1 - Incoming data: {data}")  # Add a print statement here
